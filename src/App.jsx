@@ -35,6 +35,18 @@ function onlyUniqueBreeds(pics) {
 // in our reducer we spell out different action types and our application will dispatch them
 function ourReducer(draft, action) {
   switch(action.type) {
+    case "guessAttempt":
+      // determine if user got the answer right or wrong
+      if (action.value === draft.currentQuestion.answer) {
+        // if user got it right give them a point
+        draft.points++;
+        // and generate a new question
+        draft.currentQuestion = generateQuestion();
+      } else {
+        // if user got the answer wrong we give them a strike
+        draft.strikes++;
+      }
+      return
     case "startPlaying":
       // each time we play the game we get 30 seconds
       draft.timeRemaining = 30;
@@ -57,6 +69,10 @@ function ourReducer(draft, action) {
 
   // goal of this function is to return an object
   function generateQuestion() {
+    // perform a new fetch to request more dog images
+    if (draft.bigCollection.length <= 12) {
+      draft.fetchCount++;
+    }
     // every time we generate a question we would
     // want to remove the first four items in the
     // array because the next time we generate a
@@ -142,7 +158,8 @@ function App() {
     return () => {
       reqController.abort();
     }
-  }, []);
+    // runs the first time when the component first renders and anytime this changes
+  }, [state.fetchCount]);
 
   return (
     <div>
@@ -154,7 +171,8 @@ function App() {
             {/* and the four images of the dogs which will only display once we're playing the game */}
             {state.currentQuestion.photos.map((photo, index) => {
               // for the background image don't use tailwind and add that property directly ourselves
-              return <div key={index} className="rounded-lg h-40 lg:h-80 bg-cover bg-center" style={{backgroundImage: `url(${photo})`}}></div>
+              // add onClick event handler so that we can click on the correct dog
+              return <div onClick={() => dispatch({type: "guessAttempt", value: index})} key={index} className="rounded-lg h-40 lg:h-80 bg-cover bg-center" style={{backgroundImage: `url(${photo})`}}></div>
             })}
           </div>
         </>
@@ -168,9 +186,9 @@ function App() {
         <>
           {/* position the button */}
           <p className="text-center fixed top-0 bottom-0 left-0 right-0 flex justify-center items-center">
-          {/* make button look nice */}
-          {/* don't want to have to worry about how state should change in our jsx and event handler */}
-          {/* we want all of that to live in reducer by spelling out an action with this matching name */}
+            {/* make button look nice */}
+            {/* don't want to have to worry about how state should change in our jsx and event handler */}
+            {/* we want all of that to live in reducer by spelling out an action with this matching name */}
             <button onClick={() => dispatch({type: "startPlaying"})} className="text-white bg-gradient-to-b from-indigo-500 to-indigo-600 px-4 py-3 rounded text-2xl font-bold">
               Play
             </button>
