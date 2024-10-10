@@ -116,6 +116,17 @@ const initialState = {
   fetchCount: 0
 }
 
+// create as own separate component so we don't bloat return in App
+// and we can give it whatever colour (className) we want in the different situations (no mistakes
+// bright pink and mistakes muted pink)
+function HeartIcon(props) {
+  return(
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" className={props.className} viewBox="0 0 16 16">
+      <path d="M4 1c2.21 0 4 1.755 4 3.92C8 2.755 9.79 1 12 1s4 1.755 4 3.92c0 3.263-3.234 4.414-7.608 9.608a.513.513 0 0 1-.784 0C3.234 9.334 0 8.183 0 4.92 0 2.755 1.79 1 4 1"/>
+    </svg>
+  )
+}
+
 function App() {
   const [state, dispatch] = useImmerReducer(ourReducer, initialState)
 
@@ -165,6 +176,37 @@ function App() {
     <div>
       {state.currentQuestion && (
         <>
+          <p className="text-center">
+            {/* time remaining */}
+            <span className="text-zinc-400 mr-3">
+              {/* clock icon animated
+              to spin if the game is
+              being actively played
+              but if the game's not
+              being played we don't
+              need the icon to keep
+              spinning */}
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" className={"inline-block " + (state.playing ? "animate-spin" : "")} viewBox="0 0 16 16">
+                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/>
+                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/>
+              </svg>
+              {/* text of how much time is remaining */}
+              <span className="font-mono text-4xl relative top-2 ml-3">0:{state.timeRemaining < 10 ? "0" + state.timeRemaining : state.timeRemaining}</span>
+            </span>
+
+            {/* bright pink hearts that show how many strikes you have left*/}
+
+            {/* nice way to loop through something x number of times in jsx is
+            to use the spread syntax on the generic or uppercase array and say
+            how many items you want want in the empty array */}
+            {[...Array(3 - state.strikes)].map((item, index) => {
+              return <HeartIcon key={index} className="inline text-pink-600 mx-1" />
+            })}
+            {/* when we get the answer wrong we would want there to be a muted pink heart */}
+            {[...Array(state.strikes)].map((item, index) => {
+              return <HeartIcon key={index} className="inline text-pink-100 mx-1" />
+            })}
+          </p>
           {/* show the current question */}
           <h1 className="text-center font-bold pt-3 pb-10 break-all text-4xl md:text-7xl">{state.currentQuestion.breed}</h1>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 px-5">
