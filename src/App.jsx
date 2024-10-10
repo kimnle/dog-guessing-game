@@ -50,6 +50,33 @@ function ourReducer(draft, action) {
       // normally in a reducer would have to return the new value but with immer can return nothing and draft will be used automatically
       return;
   }
+
+  // goal of this function is to return an object
+  function generateQuestion() {
+    // every time a question is generated remove
+    // the first four items in the array because
+    // the next time a question is generated want
+    // the new first four in the old array but the
+    // very first time start playing in the app is
+    // clicked don't need to remove the orginial four
+
+    // if this evaluates to true that means a question
+    // has already been generated before which means the
+    // game has already been started to play which means
+    // remove the first four items
+    if (draft.currentQuestion) {
+      draft.bigCollection = draft.bigCollection.slice(4, draft.bigCollection.length);
+    }
+
+    // generate random number from 0 to 3
+    const tempRandom = Math.floor(Math.random() * 4);
+    // create the array that user is choosing from
+    const justFour = draft.bigCollection.slice(0, 4);
+    // properties a question should have
+    // breed should be the text value that has been identified as the correct answer
+    // answer would be the correct image from the random number where the user chooses between an array of four image (0 through 3)
+    return {breed: justFour[tempRandom].split("/")[4], photos: justFour, answer: tempRandom};
+  }
 }
 
 // spell out everything the game is going to need
