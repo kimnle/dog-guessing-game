@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useImmerReducer } from "use-immer";
 
 // function to filter out duplicates and shave it off so that the array ends in a multiple of four
 function onlyUniqueBreeds(pics) {
@@ -26,7 +27,48 @@ function onlyUniqueBreeds(pics) {
   return uniquePics.slice(0, Math.floor(uniquePics.length / 4) * 4);
 }
 
+// usually in react don't directly mutate the state and if working with an object with lots of different sub properties
+// it can get a little bit awkward because have to get creative of copying or sort of rebuilding own new version of state
+
+// immer gives us draft - free to directly change and mutate draft
+// in reducer spell out different action types and application will dispatch them
+function ourReducer(draft, action) {
+  switch(action.type) {
+    case "startPlaying":
+      // each time get 30 seconds to play the game
+      draft.timeRemaining = 30;
+      // reset the game because playing the game another time
+      draft.points = 0;
+      draft.strikes = 0;
+      // playing the game/game has begun
+      draft.playing = true;
+      draft.currentQuestion = generateQuestion();
+      return
+    case "addToCollection":
+      // directly add on to the existing array
+      draft.bigCollection.push(action.value);
+      // normally in a reducer would have to return the new value but with immer can return nothing and draft will be used automatically
+      return;
+  }
+}
+
+// spell out everything the game is going to need
+const initialState = {
+  points: 0,
+  strikes: 0,
+  timeRemaining: 0,
+  highScore: 0,
+  // where all of the images for different dogs are stored
+  bigCollection: [],
+  currentQuestion: null,
+  playing: false,
+  // increment this to fetch another 50 dog images
+  fetchCount: 0
+}
+
 function App() {
+  const [state, dispatch] = useImmerReducer(ourReducer, initialState)
+
   // fetch data when the app first renders using useEffect
   useEffect(() => {
     // cancel or abort fetch request
@@ -39,7 +81,11 @@ function App() {
         const picsPromise = await fetch("https://dog.ceo/api/breeds/image/random/50", {signal: reqController.signal});
         const pics = await picsPromise.json();
         const uniquePics = onlyUniqueBreeds(pics.message);
-        console.log(uniquePics);
+        // calling dispatch that exists from const [state, dispatch] line to trigger or use the reducer
+
+        // throughout the entire application don't have to worry about the details of how state is getting
+        // changed can just dispatch an action and all of the logic can live inside ourReducer 
+        dispatch({type: "addToCollection", value: uniquePics});
       } catch {
         console.log("Our request was cancelled");
       }
@@ -64,7 +110,13 @@ function App() {
 
   return (
     <div>
-      <h1 className="text-green-500 font-bold text-3xl">Hello from React</h1>
+      {/* position the button */}
+      <p className="text-center fixed top-0 bottom-0 left-0 right-0 flex justify-center items-center">
+        {/* make button look nice */}
+        {/* don't want to have to worry about how state should change in jsx and event handler */}
+        {/* want all of that to live in reducer by spelling out an action with this matching name */}
+        <button onClick={() => dispatch({type: "startPlaying"})} className="text-white bg-gradient-to-b from-indigo-500 to-indigo-600 px-4 py-3 rounded text-2xl font-bold">Play</button>
+      </p>
     </div>
   )
 }
