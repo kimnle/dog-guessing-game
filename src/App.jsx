@@ -34,7 +34,17 @@ function onlyUniqueBreeds(pics) {
 // immer gives us draft and we are free to directly change and mutate draft
 // in our reducer we spell out different action types and our application will dispatch them
 function ourReducer(draft, action) {
+  // there are multiple places we want to check for high score (3 strikes and time runs out)
+  // so instead of repeating the code and because we're using immer run this any time our reducer
+  // gets called
+  if (draft.points > draft.highScore) draft.highScore = draft.points;
+
   switch(action.type) {
+    case "receiveHighScore":
+      draft.highScore = action.value;
+      // set default value of 0 so that way if it attempts to read local storage and nothing is there it's not null
+      if (!action.value) draft.highScore = 0;
+      return;
     case "decreaseTime":
       // if this is true then we want to tell the game to stop playing
       if (draft.timeRemaining <= 0) {
@@ -149,6 +159,23 @@ function HeartIcon(props) {
 function App() {
   const timer = useRef(null);
   const [state, dispatch] = useImmerReducer(ourReducer, initialState);
+
+  // synchronise our state to local storage
+
+  // load or pull high score from local storage when our app first renders and put it into our state
+  useEffect(() => {
+    dispatch({type: "receiveHighScore", value: localStorage.getItem("highScore")});
+  }, []);
+
+  // watches the state in ourReducer that sets high score if it's a new high score and saves that into local storage
+  useEffect(() => {
+    // if we've scored more than 0
+    if (state.highScore > 0) {
+      // write and save it premanently to local storage
+      localStorage.setItem("highScore", state.highScore);
+    }
+    // any time this changes that means the user just scored a new high score
+  }, [state.highScore]);
 
   // pre-load eight images for the next
   // two questions ahead of time so we
@@ -324,7 +351,7 @@ function App() {
               </span>
             </p>
             {/* display high score */}
-            <p className="mb-5">Your high score: 0</p>
+            <p className="mb-5">Your high score: {state.highScore}</p>
 
             {/* add a play again button */}
             <button onClick={() => dispatch({type: "startPlaying"})} className="text-white bg-gradient-to-b from-indigo-500 to-indigo-600 px-4 py-3 rounded text-lg font-bold">
