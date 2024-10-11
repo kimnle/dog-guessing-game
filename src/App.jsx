@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useImmerReducer } from "use-immer";
 
 // function to filter out duplicates and shave it off so that the array ends in a multiple of four
@@ -35,6 +35,15 @@ function onlyUniqueBreeds(pics) {
 // in our reducer we spell out different action types and our application will dispatch them
 function ourReducer(draft, action) {
   switch(action.type) {
+    case "decreaseTime":
+      // if this is true then we want to tell the game to stop playing
+      if (draft.timeRemaining <= 0) {
+        draft.playing = false;
+        // if not true then that means we want to go ahead and subtract a second from timeRemaining
+      } else {
+        draft.timeRemaining--;
+      }
+      return;
     case "guessAttempt":
       // once the game is over and we're not currently playing it make it so that nothing happens
       // when we click on a dog because we wouldn't want to bogusly give people extra points and
@@ -56,7 +65,7 @@ function ourReducer(draft, action) {
           draft.playing = false;
         }
       }
-      return
+      return;
     case "startPlaying":
       // each time we play the game we get 30 seconds
       draft.timeRemaining = 30;
@@ -67,7 +76,7 @@ function ourReducer(draft, action) {
       draft.playing = true;
       // create this function living inside ourReducer 
       draft.currentQuestion = generateQuestion();
-      return
+      return;
     case "addToCollection":
       // take the entire array and combine that onto our array
       draft.bigCollection = draft.bigCollection.concat(action.value);
@@ -138,7 +147,33 @@ function HeartIcon(props) {
 }
 
 function App() {
-  const [state, dispatch] = useImmerReducer(ourReducer, initialState)
+  const timer = useRef(null);
+  const [state, dispatch] = useImmerReducer(ourReducer, initialState);
+
+  useEffect(() => {
+    if (state.playing) {
+      console.log("Interval created");
+      // begin an interval so that every
+      // 1000 millisecond (1 second) we
+      // want to decrease the amount of
+      // time remaining in a way where
+      // we can cancel or clear it
+      timer.current = setInterval(() => {
+        dispatch({type: "decreaseTime"});
+      },1000);
+
+      // because we're in a useEffect be sure to clean up
+      return() => {
+        console.log("Interval cleared from clean up");
+        // clear the interval so the broswer stops holding onto it and trying to run the function every second
+        clearInterval(timer.current);
+      }
+    }
+    // the function is only going to run when the dependency array changes so once we count down from 30 all the way down from 0
+
+    // in our reducer we set playing to false and that would trigger this useEffect to run again and react calls the previous version's
+    // clean up function
+  }, [state.playing]);
 
   // fetch data when our app first renders using useEffect
   useEffect(() => {
