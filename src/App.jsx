@@ -36,6 +36,12 @@ function onlyUniqueBreeds(pics) {
 function ourReducer(draft, action) {
   switch(action.type) {
     case "guessAttempt":
+      // once the game is over and we're not currently playing it make it so that nothing happens
+      // when we click on a dog because we wouldn't want to bogusly give people extra points and
+      // strikes
+
+      // if this is !true = false end and do nothing but if this is !false = true then all of our other code can happen
+      if (!draft.playing) return;
       // determine if user got the answer right or wrong
       if (action.value === draft.currentQuestion.answer) {
         // if user got it right give them a point
@@ -45,6 +51,10 @@ function ourReducer(draft, action) {
       } else {
         // if user got the answer wrong we give them a strike
         draft.strikes++;
+        // icon stops spinning once we've made three strikes so the game is no longer in actively playing mode
+        if (draft.strikes >= 3) {
+          draft.playing = false;
+        }
       }
       return
     case "startPlaying":
@@ -236,6 +246,38 @@ function App() {
             </button>
           </p>
         </>
+      )}
+
+      {/* display game over overlay that would only display when it makes sense to show the game over */}
+      
+      {/* && if there's a current question that way we don't accidentally show the game over overlay when
+      the game first starts and there hasn't been a question generated yet */}
+      {(state.timeRemaining <= 0 || state.strikes >= 3) && state.currentQuestion && (
+        <div className="fixed top-0 bottom-0 left-0 right-0 bg-black/90 text-white flex justify-center items-center text-center">
+          {/* inner wrapper div so that all of these different elements are grouped instead of being treated as direct children */}
+          <div>
+            {state.timeRemaining <= 0 && <p className="text-6xl mb-4 font-bold">Time's up!!</p>}
+            {state.strikes >= 3 && <p className="text-6xl mb-4 font-bold">3 strikes, you're out!!</p>}
+
+            <p>Your score:{" "}
+              {/* star icon */}
+              <span className="text-amber-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="inline-block relative bottom-1 mx-1" viewBox="0 0 16 16">
+                  <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+                </svg>
+                {/* and the number of points we earned */}
+                {state.points}
+              </span>
+            </p>
+            {/* display high score */}
+            <p className="mb-5">Your high score: 0</p>
+
+            {/* add a play again button */}
+            <button onClick={() => dispatch({type: "startPlaying"})} className="text-white bg-gradient-to-b from-indigo-500 to-indigo-600 px-4 py-3 rounded text-lg font-bold">
+              Play again
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
