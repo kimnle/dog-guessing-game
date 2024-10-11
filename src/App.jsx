@@ -150,6 +150,25 @@ function App() {
   const timer = useRef(null);
   const [state, dispatch] = useImmerReducer(ourReducer, initialState);
 
+  // pre-load eight images for the next
+  // two questions ahead of time so we
+  // don't need to waste people's bandwith
+  // and load all of the questions in advance
+  // and that way the second they click onto
+  // the next question the images are ready
+  useEffect(() => {
+    // we don't want this to run the very first
+    // second our component renders before we've
+    // completed the trip to fetch the json so only
+    // if we have fetched our json data evaluates to
+    // true
+    if (state.bigCollection.length) {
+      state.bigCollection.slice(0, 8).forEach(pic => {
+        new Image().src = pic;
+      });
+    }
+  }, [state.bigCollection]);
+
   useEffect(() => {
     if (state.playing) {
       console.log("Interval created");
