@@ -32,17 +32,17 @@ function onlyUniqueBreeds(pics) {
 // it can get a little bit awkward because we have to get creative to copy or rebuilding our own new version of state
 
 // immer gives us draft and we are free to directly change and mutate draft
-// in our reducer we spell out different action types and our application will dispatch them
+// in ourReducer we spell out different action types and our application will dispatch them
 function ourReducer(draft, action) {
   // there are multiple places we want to check for high score (3 strikes and time runs out)
-  // so instead of repeating the code and because we're using immer run this any time our reducer
+  // so instead of repeating the code and because we're using immer run this any time ourReducer
   // gets called
   if (draft.points > draft.highScore) draft.highScore = draft.points;
 
   switch(action.type) {
     case "receiveHighScore":
       draft.highScore = action.value;
-      // set default value of 0 so that way if it attempts to read local storage and nothing is there it's not null
+      // set default value of 0 so that way if it attempts to read localStorage and nothing is there it's not null
       if (!action.value) draft.highScore = 0;
       return;
     case "decreaseTime":
@@ -102,12 +102,11 @@ function ourReducer(draft, action) {
     if (draft.bigCollection.length <= 12) {
       draft.fetchCount++;
     }
-    // every time we generate a question we would
-    // want to remove the first four items in the
-    // array because the next time we generate a
-    // question we want the new first four in the
-    // old array but the very first time we click
-    // start playing in the app we don't need to
+    // every time we generate a question we would want
+    // to remove the first four items in the array because
+    // the next time we generate a question we want the new
+    // first four in the old array but the very first time
+    // we click start playing in the app we don't need to
     // remove the orginial four
 
     // if this evaluates to true
@@ -146,8 +145,8 @@ const initialState = {
 }
 
 // create as own separate component so we don't bloat return in App
-// and we can give it whatever colour (className) we want in the different situations (no mistakes
-// bright pink and mistakes muted pink)
+// and we can give it whatever colour (className) we want in the different
+// situations (no mistakes bright pink and mistakes muted pink)
 function HeartIcon(props) {
   return(
     <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" className={props.className} viewBox="0 0 16 16">
@@ -160,35 +159,30 @@ function App() {
   const timer = useRef(null);
   const [state, dispatch] = useImmerReducer(ourReducer, initialState);
 
-  // synchronise our state to local storage
+  // synchronise our state to localStorage
 
-  // load or pull high score from local storage when our app first renders and put it into our state
+  // load or pull highScore from localStorage when our app first renders and put it into our state
   useEffect(() => {
     dispatch({type: "receiveHighScore", value: localStorage.getItem("highScore")});
   }, []);
 
-  // watches the state in ourReducer that sets high score if it's a new high score and saves that into local storage
+  // watches the state in ourReducer that sets highScore if it's a new highScore and saves that into localStorage
   useEffect(() => {
     // if we've scored more than 0
     if (state.highScore > 0) {
-      // write and save it premanently to local storage
+      // write and save it premanently to localStorage
       localStorage.setItem("highScore", state.highScore);
     }
-    // any time this changes that means the user just scored a new high score
+    // any time this changes that means the user just scored a new highScore
   }, [state.highScore]);
 
-  // pre-load eight images for the next
-  // two questions ahead of time so we
-  // don't need to waste people's bandwith
-  // and load all of the questions in advance
-  // and that way the second they click onto
-  // the next question the images are ready
+  // pre-load eight images for the next two questions ahead of time so we don't
+  // need to waste people's bandwith and load all of the questions in advance and
+  // that way the second they click onto the next question the images are ready
   useEffect(() => {
-    // we don't want this to run the very first
-    // second our component renders before we've
-    // completed the trip to fetch the json so only
-    // if we have fetched our json data evaluates to
-    // true
+    // we don't want this to run the very first second our component renders before
+    // we've completed the trip to fetch the json so only if we have fetched our json
+    // data evaluates to true
     if (state.bigCollection.length) {
       state.bigCollection.slice(0, 8).forEach(pic => {
         new Image().src = pic;
@@ -199,11 +193,12 @@ function App() {
   useEffect(() => {
     if (state.playing) {
       console.log("Interval created");
-      // begin an interval so that every
-      // 1000 millisecond (1 second) we
-      // want to decrease the amount of
-      // time remaining in a way where
-      // we can cancel or clear it
+      // begin an interval so
+      // that every 1000 millisecond
+      // (1 second) we want to decrease
+      // the amount of time remaining in
+      // a way where we can cancel or clear
+      // it
       timer.current = setInterval(() => {
         dispatch({type: "decreaseTime"});
       },1000);
@@ -217,7 +212,7 @@ function App() {
     }
     // the function is only going to run when the dependency array changes so once we count down from 30 all the way down from 0
 
-    // in our reducer we set playing to false and that would trigger this useEffect to run again and react calls the previous version's
+    // in ourReducer we set playing to false and that would trigger this useEffect to run again and react calls the previous version's
     // clean up function
   }, [state.playing]);
 
@@ -310,16 +305,16 @@ function App() {
           </div>
         </>
       )}
-      {/* the start playing button should only display if we're not already playing and wait to show the
-      play button until we've successfully fetched data from the api so when we first load the screen it
-      can be empty because we don't want to click on the play button if we don't have any data ready yet
-      and when the first time the app is loading up currentQuestion is set to null so we want to show the
-      initial start playing button */}
+      {/* the start playing button should only display if we're not already playing
+      and wait to show the play button until we've successfully fetched data from the
+      api so when we first load the screen it can be empty because we don't want to click
+      on the play button if we don't have any data ready yet and when the first time the
+      app is loading up currentQuestion is set to null so we want to show the initial start
+      playing button */}
       {state.playing == false && Boolean(state.bigCollection.length) && !state.currentQuestion && (
         <>
           {/* position the button */}
           <p className="text-center fixed top-0 bottom-0 left-0 right-0 flex justify-center items-center">
-            {/* make button look nice */}
             {/* don't want to have to worry about how state should change in our jsx and event handler */}
             {/* we want all of that to live in reducer by spelling out an action with this matching name */}
             <button onClick={() => dispatch({type: "startPlaying"})} className="text-white bg-gradient-to-b from-indigo-500 to-indigo-600 px-4 py-3 rounded text-2xl font-bold">
